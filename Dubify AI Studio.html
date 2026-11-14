@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="km"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Dubify AI Studio</title>
+<style>
+:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);--bg:#14112a;--panel:#1d1a38;--panel2:#262248;--line:#35305f;--ink:#ece9ff;--mute:#9a95c4;--acc:#7c5cff;--ok:#3ddc97;--bad:#ff6b81}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--bg:#14112a}}
+:root[data-theme="dark"]{--bg:#14112a}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.45 "Noto Sans Khmer","Segoe UI",system-ui,sans-serif}
+header{display:flex;align-items:center;gap:10px;padding:10px 12px;border-bottom:1px solid var(--line);position:sticky;top:env(safe-area-inset-top,0px);background:var(--bg);z-index:5}
+header b{font-size:16px}header small{color:var(--mute);display:block;font-size:11px}
+.logo{width:30px;height:30px;border-radius:8px;background:linear-gradient(135deg,#7c5cff,#3ddcff);display:grid;place-items:center;font-weight:700}
+.sp{flex:1}
+button,select,input,textarea{font:inherit;color:var(--ink);background:var(--panel2);border:1px solid var(--line);border-radius:8px;padding:7px 10px}
+button{cursor:pointer}button.p{background:var(--acc);border-color:var(--acc);font-weight:600}
+button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:2px solid #b7a6ff;outline-offset:1px}
+main{max-width:720px;margin:0 auto;padding:10px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:10px;margin-bottom:10px}
+.stage{position:relative;background:#000;border-radius:10px;overflow:hidden;aspect-ratio:16/9;display:grid;place-items:center}
+video{width:100%;height:100%;object-fit:contain;background:#000}
+#ov{position:absolute;left:8px;right:8px;bottom:10px;text-align:center;font-size:17px;font-weight:700;text-shadow:0 0 4px #000,0 0 4px #000;pointer-events:none}
+#empty{position:absolute;color:var(--mute);text-align:center;padding:10px}
+.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.tabs{display:flex;gap:6px;overflow-x:auto;margin-bottom:10px}
+.tabs button{white-space:nowrap}.tabs button.on{background:var(--acc);border-color:var(--acc)}
+.pane{display:none}.pane.on{display:block}
+.sub{display:grid;grid-template-columns:26px 1fr auto;gap:8px;padding:8px;border:1px solid var(--line);border-radius:10px;margin-bottom:6px;background:var(--panel2)}
+.sub.cur{border-color:var(--acc);box-shadow:0 0 0 1px var(--acc)}
+.sub .t{font-size:11px;color:var(--mute)}
+.sub textarea{width:100%;min-height:34px;margin-top:3px;resize:vertical}
+.badge{font-size:11px;padding:2px 7px;border-radius:99px;background:#2e2a57;color:var(--mute)}
+.badge.ok{color:var(--ok)}.badge.bad{color:var(--bad)}
+.tl{position:relative;height:60px;background:var(--panel2);border-radius:8px;overflow:hidden;border:1px solid var(--line)}
+.tl i{position:absolute;top:8px;height:18px;background:#3b3475;border:1px solid var(--acc);border-radius:4px}
+.tl u{position:absolute;top:34px;height:16px;background:#1f7a57;border-radius:4px}
+.tl s{position:absolute;top:0;bottom:0;width:2px;background:#fff}
+#log{height:110px;overflow:auto;font:12px ui-monospace,monospace;color:var(--mute)}
+#log em{color:var(--ok);font-style:normal}
+label{display:block;color:var(--mute);font-size:12px;margin:8px 0 3px}
+.full{width:100%}
+.key{display:flex;gap:8px;align-items:center;padding:6px 0;border-bottom:1px solid var(--line)}
+.key code{flex:1;overflow:hidden;text-overflow:ellipsis}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+h3{margin:0 0 8px;font-size:14px}
+</style></head><body>
+<header><div class="logo">D</div><div><b>Dubify AI</b><small>ស្ទូឌីយោបកប្រែ និងថតសំឡេងវីដេអូ</small></div><span class="sp"></span>
+<button id="bNew">ថ្មី</button><button class="p" id="bExp">នាំចេញ SRT</button></header>
+<main>
+<div class="card">
+ <div class="stage"><video id="v" playsinline controls></video><div id="empty">ជ្រើសវីដេអូ ដើម្បីចាប់ផ្តើម</div><div id="ov"></div></div>
+ <div class="row" style="margin-top:8px">
+  <label class="sp" style="margin:0"><input id="fv" type="file" accept="video/*" hidden><button id="bv" class="full">📁 បើកវីដេអូ</button></label>
+  <input id="fs" type="file" accept=".srt,.txt" hidden><button id="bi">នាំចូល SRT</button>
+  <select id="rate"><option>0.75</option><option selected>1</option><option>1.25</option><option>1.5</option></select>
+ </div>
+</div>
+<div class="tabs" id="tabs"><button class="on" data-p="p1">អត្ថបទ</button><button data-p="p2">ថ្នាំងពេលវេលា</button><button data-p="p3">ថតសំឡេង</button><button data-p="p4">API Keys</button><button data-p="p5">កំណត់ហេតុ</button></div>
+
+<section class="pane on card" id="p1">
+ <div class="row" style="margin-bottom:8px"><button id="add">+ បន្ថែម</button><button id="del">លុបដែលបានជ្រើស</button><button id="scan">ស្កេនតួអក្សរ</button><span class="sp"></span><span class="badge" id="cnt">0 ជួរ</span></div>
+ <div class="row" style="margin-bottom:8px"><input id="fr" placeholder="រក" style="flex:1;min-width:0"><input id="rp" placeholder="ជំនួសដោយ" style="flex:1;min-width:0"><button id="fa">ជំនួស</button></div>
+ <div id="list"></div>
+</section>
+
+<section class="pane card" id="p2">
+ <h3>ថ្នាំងពេលវេលា</h3>
+ <div class="tl" id="tl"><s id="ph"></s></div>
+ <div class="row" style="margin-top:8px;color:var(--mute);font-size:12px"><span>▭ អត្ថបទ</span><span style="color:var(--ok)">▭ សំឡេង TTS</span><span class="sp"></span><span id="tc">00:00 / 00:00</span></div>
+</section>
+
+<section class="pane card" id="p3">
+ <h3>ថតសំឡេង (TTS)</h3>
+ <div class="grid"><div><label>សំឡេងស្រី</label><select id="vf" class="full"></select></div><div><label>សំឡេងប្រុស</label><select id="vm" class="full"></select></div></div>
+ <div class="row" style="margin-top:10px"><button class="p" id="gen">▶ ចាក់សំឡេងទាំងអស់ជាមួយវីដេអូ</button><button id="stop">⏹ បញ្ឈប់</button><button id="tv">សាកល្បងសំឡេង</button></div>
+ <p style="color:var(--mute);font-size:12px">ប្រើសំឡេងក្នុងឧបករណ៍របស់អ្នក។ ជ្រើសភេទក្នុងជួរនីមួយៗនៅផ្ទាំងអត្ថបទ។</p>
+ <div class="row"><button id="tr">បកប្រែ (Gemini)</button><button id="sm">សង្ខេប</button></div>
+</section>
+
+<section class="pane card" id="p4">
+ <h3>Gemini និង CodeCraft Keys</h3>
+ <div class="row"><span class="sp">Key បច្ចុប្បន្ន: <code id="cur">—</code></span><span class="badge ok">Working</span></div>
+ <label>បន្ថែម CodeCraft Key</label>
+ <div class="row"><input id="ki" class="sp" placeholder="cc_..." style="min-width:0"><button id="kp">Paste</button><button class="p" id="ka">Add Key</button></div>
+ <div id="keys"></div>
+ <div class="row" style="margin-top:8px"><button id="kt">Test All</button></div>
+ <label>Model</label><select id="model" class="full"><option>gemini-3.6-flash</option><option>gemini-1.5-flash</option><option>gemini-1.5-pro</option></select>
+ <p style="color:var(--mute);font-size:12px">Keys រក្សាទុកតែក្នុងកម្មវិធីរុករករបស់អ្នក។ ការបកប្រែពិតត្រូវការ backend។</p>
+</section>
+
+<section class="pane card" id="p5"><h3>កំណត់ហេតុ</h3><div id="log"></div></section>
+</main>
+<script>
+const $=id=>document.getElementById(id);
+let subs=[],keys=[],cur=-1,vf=null,vm=null,playing=false;
+const v=$('v');
+const S={get(k,d){try{return JSON.parse(localStorage.getItem(k))??d}catch(e){return d}},set(k,x){try{localStorage.setItem(k,JSON.stringify(x))}catch(e){}}};
+function log(m){const t=new Date().toTimeString().slice(0,8);$('log').insertAdjacentHTML('beforeend','<div><em>[INFO]</em> '+t+' '+m.replace(/</g,'&lt;')+'</div>');$('log').scrollTop=1e9}
+const fmt=s=>{const m=Math.floor(s/60),x=Math.floor(s%60);return String(m).padStart(2,'0')+':'+String(x).padStart(2,'0')};
+const ts=s=>{const h=Math.floor(s/3600),m=Math.floor(s%3600/60),x=s%60;return [h,m].map(n=>String(n).padStart(2,'0')).join(':')+':'+x.toFixed(3).padStart(6,'0').replace('.',',')};
+const pt=t=>{const m=t.trim().match(/(\d+):(\d+):(\d+)[,.](\d+)/);return m?+m[1]*3600+ +m[2]*60+ +m[3]+ +('0.'+m[4]):0};
+function save(){S.set('dub.subs',subs)}
+function render(){
+ $('cnt').textContent=subs.length+' ជួរ';
+ $('list').innerHTML=subs.map((s,i)=>`<div class="sub" data-i="${i}"><input type="checkbox" ${s.on?'checked':''} data-c="${i}"><div><div class="t">${ts(s.a)} → ${ts(s.b)} <button data-j="${i}" style="padding:1px 6px">⏵</button></div><textarea data-e="${i}">${s.t.replace(/</g,'&lt;')}</textarea></div><div><select data-g="${i}"><option value="f" ${s.g=='f'?'selected':''}>ស្រី</option><option value="m" ${s.g=='m'?'selected':''}>ប្រុស</option></select><div class="badge" style="margin-top:4px">${s.d?'Done':'Pending'}</div></div></div>`).join('')||'<p style="color:var(--mute)">មិនទាន់មានអត្ថបទ។ នាំចូល SRT ឬចុច + បន្ថែម។</p>';
+ drawTl();save()}
+function drawTl(){
+ const D=v.duration||Math.max(60,...subs.map(s=>s.b),1);
+ $('tl').innerHTML='<s id="ph"></s>'+subs.map(s=>`<i style="left:${s.a/D*100}%;width:${Math.max(.6,(s.b-s.a)/D*100)}%"></i>`).join('')+subs.filter(s=>s.d).map(s=>`<u style="left:${s.a/D*100}%;width:${Math.max(.6,(s.b-s.a)/D*100)}%"></u>`).join('')}
+$('list').addEventListener('input',e=>{const t=e.target;if(t.dataset.e!=null){subs[+t.dataset.e].t=t.value;save()}});
+$('list').addEventListener('change',e=>{const t=e.target;if(t.dataset.c!=null)subs[+t.dataset.c].on=t.checked;if(t.dataset.g!=null)subs[+t.dataset.g].g=t.value;save()});
+$('list').addEventListener('click',e=>{const j=e.target.dataset.j;if(j!=null){v.currentTime=subs[+j].a;v.play()}});
+$('add').onclick=()=>{const a=v.currentTime||0;subs.push({a,b:a+3,t:'អត្ថបទថ្មី',g:'f',on:true,d:false});subs.sort((x,y)=>x.a-y.a);render();log('បន្ថែមជួរថ្មី')};
+$('del').onclick=()=>{const n=subs.length;subs=subs.filter(s=>!s.on);render();log('លុប '+(n-subs.length)+' ជួរ')};
+$('fa').onclick=()=>{const f=$('fr').value;if(!f)return;let n=0;subs.forEach(s=>{if(s.t.includes(f)){s.t=s.t.split(f).join($('rp').value);n++}});render();log('ជំនួស '+n+' ជួរ')};
+$('scan').onclick=()=>{const bad=subs.filter(s=>!s.t.trim()).length;log('ស្កេនរួច៖ ជួរទទេ '+bad+' / សរុប '+subs.length);alert('ជួរទទេ: '+bad)};
+$('bv').onclick=()=>$('fv').click();
+$('fv').onchange=e=>{const f=e.target.files[0];if(!f)return;v.src=URL.createObjectURL(f);$('empty').style.display='none';log('បើកវីដេអូ '+f.name)};
+$('bi').onclick=()=>$('fs').click();
+$('fs').onchange=e=>{const f=e.target.files[0];if(!f)return;f.text().then(x=>{subs=x.replace(/\r/g,'').split(/\n\s*\n/).map(b=>{const l=b.trim().split('\n');const i=l.findIndex(z=>z.includes('-->'));if(i<0)return null;const [a,c]=l[i].split('-->');return{a:pt(a),b:pt(c),t:l.slice(i+1).join('\n'),g:'f',on:true,d:false}}).filter(Boolean);render();log('នាំចូល SRT '+subs.length+' ជួរ')})};
+$('bExp').onclick=()=>{const o=subs.map((s,i)=>(i+1)+'\n'+ts(s.a)+' --> '+ts(s.b)+'\n'+s.t+'\n').join('\n');const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([o],{type:'text/plain'}));a.download='subtitles.srt';a.click();log('នាំចេញ SRT')};
+$('bNew').onclick=()=>{if(confirm('ចាប់ផ្តើមគម្រោងថ្មី?')){subs=[];render();log('គម្រោងថ្មី')}};
+$('rate').onchange=()=>v.playbackRate=+$('rate').value;
+v.addEventListener('timeupdate',()=>{const t=v.currentTime;const i=subs.findIndex(s=>t>=s.a&&t<=s.b);$('ov').textContent=i>=0?subs[i].t:'';
+ if(i!==cur){cur=i;document.querySelectorAll('.sub').forEach(el=>el.classList.toggle('cur',+el.dataset.i===i));if(playing&&i>=0)say(subs[i])}
+ $('tc').textContent=fmt(t)+' / '+fmt(v.duration||0);const p=$('ph');if(p)p.style.left=(t/(v.duration||60)*100)+'%'});
+v.addEventListener('loadedmetadata',drawTl);
+$('tl').onclick=e=>{const r=$('tl').getBoundingClientRect();v.currentTime=(e.clientX-r.left)/r.width*(v.duration||0)};
+function voices(){const L=speechSynthesis.getVoices();const o=L.map((x,i)=>`<option value="${i}">${x.name} (${x.lang})</option>`).join('');$('vf').innerHTML=o;$('vm').innerHTML=o;const k=L.findIndex(x=>x.lang.startsWith('km'));if(k>=0)$('vf').value=$('vm').value=k}
+if('speechSynthesis' in window){speechSynthesis.onvoiceschanged=voices;voices()}
+function say(s){if(!('speechSynthesis' in window))return;const L=speechSynthesis.getVoices();const u=new SpeechSynthesisUtterance(s.t);const x=L[+$(s.g=='m'?'vm':'vf').value];if(x){u.voice=x;u.lang=x.lang}u.rate=+$('rate').value;speechSynthesis.speak(u);s.d=true;drawTl()}
+$('gen').onclick=()=>{playing=true;v.currentTime=subs[0]?subs[0].a:0;v.muted=false;v.play();log('ចាប់ផ្តើមថតសំឡេង TTS')};
+$('stop').onclick=()=>{playing=false;speechSynthesis.cancel();v.pause();render()};
+$('tv').onclick=()=>say({t:subs[0]?subs[0].t:'សួស្តី',g:'f'});
+$('tr').onclick=()=>{log('ការបកប្រែត្រូវការ backend និង API key ពិត');alert('ការបកប្រែតាម Gemini ត្រូវភ្ជាប់ backend។ កម្មវិធីនេះមិនទាន់ភ្ជាប់។')};
+$('sm').onclick=()=>alert(subs.length?'សរុប '+subs.length+' ជួរ, ប្រវែង '+fmt(Math.max(...subs.map(s=>s.b)))+'។':'មិនទាន់មានអត្ថបទ');
+const mask=k=>k.slice(0,7)+'....'+k.slice(-4);
+function rk(){$('keys').innerHTML=keys.map((k,i)=>`<div class="key"><span class="badge">Key ${i+1}</span><code>${mask(k.v)}</code><span class="badge ${k.s=='Working'?'ok':'bad'}">${k.s}</span><button data-t="${i}">Test</button><button data-x="${i}">🗑</button></div>`).join('');$('cur').textContent=keys[0]?mask(keys[0].v):'—';S.set('dub.keys',keys)}
+$('ka').onclick=()=>{const x=$('ki').value.trim();if(x.length<8)return alert('Key ខ្លីពេក');keys.push({v:x,s:'Untested'});$('ki').value='';rk();log('បន្ថែម key')};
+$('kp').onclick=()=>navigator.clipboard.readText().then(x=>$('ki').value=x).catch(()=>alert('មិនអាចចូលដល់ clipboard'));
+$('keys').onclick=e=>{const t=e.target.dataset;if(t.x!=null){keys.splice(+t.x,1);rk()}if(t.t!=null){keys[+t.t].s=/^(cc_|AQ|AIza)/.test(keys[+t.t].v)?'Working':'Invalid';rk()}};
+$('kt').onclick=()=>{keys.forEach(k=>k.s=/^(cc_|AQ|AIza)/.test(k.v)?'Working':'Invalid');rk();log('Test All (ពិនិត្យទម្រង់ប៉ុណ្ណោះ)')};
+$('tabs').onclick=e=>{const p=e.target.dataset.p;if(!p)return;document.querySelectorAll('.pane').forEach(x=>x.classList.toggle('on',x.id===p));document.querySelectorAll('#tabs button').forEach(b=>b.classList.toggle('on',b===e.target));if(p==='p2')drawTl()};
+subs=S.get('dub.subs',[]);keys=S.get('dub.keys',[]);
+if(!subs.length)subs=[[12.5,16.2,'ខ្ញុំស្រលាញ់អ្នកណាស់','f'],[18.3,22.1,'កុំចាកចេញពីខ្ញុំ','m'],[25.6,28.9,'យើងនឹងជួបគ្នាម្តងទៀត','f']].map(a=>({a:a[0],b:a[1],t:a[2],g:a[3],on:true,d:false}));
+render();rk();log('ប្រព័ន្ធរួចរាល់');
+</script></body></html>
